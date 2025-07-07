@@ -25,9 +25,21 @@ export default function UploadZone({ onFileUpload, onProcessingStart }: UploadZo
         description: `${file.name} is ready for analysis`,
       });
     } catch (error) {
+      let errorMessage = "Please check file size (max 10MB) and format (JPEG/PNG)";
+      if (error.issues) {
+        const sizeIssue = error.issues.find(i => i.message.includes('10MB'));
+        const formatIssue = error.issues.find(i => i.message.includes('JPEG'));
+        
+        if (sizeIssue) {
+          errorMessage = "File is too large. Maximum size is 10MB.";
+        } else if (formatIssue) {
+          errorMessage = "Invalid file format. Please use JPEG or PNG files.";
+        }
+      }
+      
       toast({
         title: "Upload failed",
-        description: "Please check file size (max 10MB) and format (JPEG/PNG)",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -101,8 +113,9 @@ export default function UploadZone({ onFileUpload, onProcessingStart }: UploadZo
                 Select File
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Supported formats: JPEG, PNG • Max size: 10MB
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div>Supported formats: JPEG, PNG</div>
+              <div>Max size: 10MB • Recommended: High-resolution X-ray images</div>
             </div>
           </div>
         </div>

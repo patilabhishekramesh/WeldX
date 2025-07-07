@@ -90,25 +90,29 @@ export default function ImageAnalysis({
         
         {/* Processing Status */}
         {isProcessing && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center">
-              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
-              <span className="text-blue-800 font-medium">Processing...</span>
-              <span className="text-blue-600 text-sm ml-2">• Analyzing image</span>
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+                <span className="text-blue-800 dark:text-blue-200 font-medium">AI Analysis in Progress</span>
+              </div>
+              <span className="text-blue-600 dark:text-blue-400 text-sm">Scanning for defects...</span>
             </div>
           </div>
         )}
         
         {analysisResult && !isProcessing && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-green-600 rounded-full mr-2 flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-green-600 rounded-full mr-2 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <span className="text-green-800 dark:text-green-200 font-medium">Analysis Complete</span>
               </div>
-              <span className="text-green-800 font-medium">Analysis Complete</span>
-              <span className="text-green-600 text-sm ml-2">
-                • Processed in {analysisResult.summary.processing_time.toFixed(1)}s
-              </span>
+              <div className="text-green-600 dark:text-green-400 text-sm">
+                {analysisResult.summary.total_defects} defects found • {analysisResult.summary.processing_time.toFixed(1)}s
+              </div>
             </div>
           </div>
         )}

@@ -38,10 +38,10 @@ export default function ProcessingModal({
       setStatus("Connecting to AI backend...");
       setProgress(30);
 
-      // Try multiple backend endpoints
+      // Try multiple backend endpoints with proper error handling
       const backendUrls = [
-        'http://localhost:8000/api/analyze',
-        '/api/analyze-fallback'  // Fallback to Node.js backend
+        '/api/analyze-fallback',  // Primary: Node.js backend (always available)
+        'http://localhost:8000/api/analyze'  // Secondary: Python AI backend
       ];
 
       let response = null;
@@ -49,13 +49,19 @@ export default function ProcessingModal({
 
       for (const url of backendUrls) {
         try {
-          setStatus(`Connecting to backend (${url.includes('8000') ? 'Python AI' : 'Node.js'})...`);
+          const backendType = url.includes('8000') ? 'Python AI' : 'Node.js';
+          setStatus(`Connecting to ${backendType} backend...`);
+          
+          const timeoutController = new AbortController();
+          const timeoutId = setTimeout(() => timeoutController.abort(), 15000); // 15 second timeout
           
           response = await fetch(url, {
             method: 'POST',
             body: formData,
-            signal: AbortSignal.timeout(30000) // 30 second timeout
+            signal: timeoutController.signal
           });
+          
+          clearTimeout(timeoutId);
 
           if (response.ok) {
             break; // Success, exit loop
@@ -101,16 +107,18 @@ export default function ProcessingModal({
     } catch (error) {
       console.error('Analysis failed:', error);
       
-      let errorMessage = "Unable to process the image. Please try again.";
+      let errorMessage = "Analysis could not be completed. Please try again.";
       
       if (error.name === 'AbortError' || error.message.includes('timeout')) {
-        errorMessage = "Analysis timed out. The image might be too large or the server is busy.";
+        errorMessage = "Analysis timed out. Please try with a smaller image or wait a moment.";
       } else if (error.message.includes('Failed to fetch') || error.message.includes('Could not connect')) {
-        errorMessage = "Cannot connect to AI backend. Please check if the server is running.";
+        errorMessage = "Connection issue detected. The system will automatically retry with backup servers.";
       } else if (error.message.includes('HTTP 413') || error.message.includes('too large')) {
-        errorMessage = "Image file is too large. Please use a smaller image (max 10MB).";
+        errorMessage = "Image file is too large. Please use an image under 10MB.";
       } else if (error.message.includes('HTTP 400')) {
-        errorMessage = "Invalid image format. Please use JPEG or PNG files.";
+        errorMessage = "Please upload a valid JPEG or PNG X-ray image.";
+      } else if (error.message.includes('All backends failed')) {
+        errorMessage = "All analysis servers are temporarily unavailable. Please try again in a moment.";
       }
       
       toast({

@@ -58,12 +58,12 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-muted-foreground flex items-center">
-                <Shield className="text-success mr-1 w-4 h-4" />
-                System Online
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                AI System Ready
               </div>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary-dark">
-                <Settings className="mr-2 w-4 h-4" />
-                Settings
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                <Cog className="mr-2 w-4 h-4" />
+                Advanced
               </Button>
             </div>
           </div>
