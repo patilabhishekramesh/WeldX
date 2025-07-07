@@ -1,0 +1,103 @@
+# AI Welding Defect Detection System
+
+## Overview
+
+This is a full-stack AI system designed to detect and visualize welding defects from radiographic (X-ray) images. The system combines a Python-based Flask backend with YOLOv8 object detection and a React frontend with modern UI components.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **UI Library**: Radix UI components with shadcn/ui styling
+- **Styling**: Tailwind CSS with custom design tokens
+- **State Management**: TanStack React Query for server state
+- **Routing**: Wouter for lightweight client-side routing
+- **Build Tool**: Vite with custom configuration
+
+### Backend Architecture
+- **Primary Backend**: Python Flask with CORS enabled
+- **AI Model**: YOLOv8 (Ultralytics) for object detection
+- **Image Processing**: OpenCV and PIL for image manipulation
+- **Secondary Backend**: Node.js/Express (development server)
+- **Database**: PostgreSQL with Drizzle ORM (configured but not actively used)
+
+### Hybrid Architecture Approach
+The system uses a dual-backend approach:
+1. **Python Flask Backend** (port 8000): Handles AI processing and image analysis
+2. **Node.js Express Backend**: Serves the React frontend and handles development tooling
+
+## Key Components
+
+### Frontend Components
+- **Upload Zone**: Drag-and-drop file upload with validation
+- **Processing Modal**: Real-time progress tracking during AI analysis
+- **Image Analysis**: Visual display of uploaded images with defect overlays
+- **Results Panel**: Summary of detected defects with categorization
+- **UI Components**: Comprehensive set of accessible components (buttons, dialogs, toasts, etc.)
+
+### Backend Components
+- **YOLODetector**: AI model wrapper for defect detection
+- **ImageProcessor**: Utility for processing detection results
+- **Flask API**: RESTful endpoints for image analysis
+- **Express Server**: Development server with hot reloading
+
+### Data Models
+- **Detection Result Schema**: Structured format for AI detection outputs
+- **Analysis Response Schema**: Complete API response format
+- **File Upload Schema**: Validation rules for image uploads
+
+## Data Flow
+
+1. **Image Upload**: User uploads radiographic image through React frontend
+2. **Validation**: Client-side validation (file size, format, dimensions)
+3. **Processing**: Image sent to Python Flask backend via HTTP POST
+4. **AI Analysis**: YOLOv8 model processes image for defect detection
+5. **Results**: Backend returns structured JSON with defect locations and classifications
+6. **Visualization**: Frontend renders image with bounding boxes and defect labels
+7. **Summary**: Analysis panel displays defect statistics and insights
+
+## External Dependencies
+
+### Frontend Dependencies
+- React ecosystem (React, React DOM, React Query)
+- Radix UI primitives for accessibility
+- Tailwind CSS for styling
+- Wouter for routing
+- Date-fns for date manipulation
+
+### Backend Dependencies
+- Flask and Flask-CORS for API server
+- Ultralytics YOLOv8 for AI model
+- OpenCV and PIL for image processing
+- NumPy for numerical operations
+- Neon Database serverless for PostgreSQL
+
+### Development Dependencies
+- Vite for build tooling
+- TypeScript for type safety
+- ESBuild for backend bundling
+- Drizzle Kit for database migrations
+
+## Deployment Strategy
+
+### Development
+- **Frontend**: Vite dev server with hot module replacement
+- **Backend**: Flask development server with auto-reload
+- **Database**: PostgreSQL via Neon serverless (configured)
+
+### Production Build
+- **Frontend**: Vite builds React app to `dist/public`
+- **Backend**: ESBuild bundles Node.js server to `dist/index.js`
+- **Python Backend**: Runs independently as Flask application
+
+### Environment Variables
+- `DATABASE_URL`: PostgreSQL connection string
+- `NODE_ENV`: Environment setting (development/production)
+
+## Changelog
+
+- July 07, 2025. Initial setup
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
