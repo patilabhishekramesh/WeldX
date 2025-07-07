@@ -1,0 +1,81 @@
+Objective
+Develop a full-stack AI system that detects and visualizes welding defects from radiographic (X-ray) images. The system should include a Python-based backend that uses a trained object detection model, and a React frontend that allows users to upload images and view detection results.
+
+Backend Overview (Python with YOLOv8)
+Features
+Image Upload Endpoint
+Create an API endpoint that receives X-ray images via HTTP POST requests.
+
+Defect Detection
+Use a pre-trained YOLOv8 model to identify defects such as cracks, porosity, slag inclusions, and others. Extract relevant details like bounding boxes, class labels, confidence scores, and object sizes.
+
+Image Analysis
+Optionally include additional analysis such as scene classification or dominant color extraction.
+
+Response Format
+Return the detection results in a structured JSON format, including information about the image, defects, and metadata.
+
+API Accessibility
+Ensure the API can be accessed by the frontend (enable CORS) and is capable of handling image inputs reliably.
+
+Tools and Technologies
+Python
+
+YOLOv8 (Ultralytics)
+
+Flask or FastAPI
+
+OpenCV
+
+PIL (Pillow)
+
+scikit-learn (optional)
+
+flask-cors or equivalent
+
+Frontend Overview (React)
+Features
+Image Upload
+Allow users to upload radiographic images through a simple interface. Support preview of the image before submission and basic validation of file type and size.
+
+API Integration
+Send the uploaded image to the backend API and handle the response. Display status updates such as loading, success, or error messages.
+
+Visualization of Results
+Display the uploaded image along with bounding boxes and labels indicating detected defects. Include overlays that show defect types and confidence scores.
+
+Analysis Panel
+Show a side panel or section summarizing the detection results, such as number of detected objects, classes of defects, and overall insights.
+
+Optional 3D Visualization
+Add an optional 3D visualization feature to simulate weld geometry and highlight defect zones using Three.js or React Three Fiber.
+
+Responsive Design
+Ensure the interface works well across devices with a clean and modern UI using a utility-first CSS framework.
+
+Tools and Technologies
+React
+
+Axios or Fetch API
+
+Tailwind CSS or ShadCN UI
+
+React Konva or HTML Canvas for 2D overlays
+
+React Three Fiber or Three.js (optional for 3D)
+
+Zustand or React Context (optional for state management)
+
+Workflow Summary
+The user uploads an X-ray image through the frontend.
+
+The frontend sends the image to the backend via an API call.
+
+The backend processes the image using the YOLOv8 model and returns detection results in JSON format.
+
+The frontend visualizes the results with bounding boxes and detailed information about detected defects.
+
+Optionally, the frontend provides a 3D view of defect locations.
+
+Outcome
+This project demonstrates how to integrate computer vision and deep learning with modern web technologies to build an intelligent non-destructive testing tool. The system is capable of automating weld inspection and presenting interpretable results to end-users through an interactive web interface.
