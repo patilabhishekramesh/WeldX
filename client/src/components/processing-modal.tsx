@@ -29,98 +29,70 @@ export default function ProcessingModal({
     if (!uploadedFile) return;
 
     try {
-      setStatus("Uploading image...");
+      setStatus("Preparing image...");
       setProgress(20);
 
       const formData = new FormData();
       formData.append('file', uploadedFile);
 
-      setStatus("Connecting to AI backend...");
-      setProgress(30);
+      setStatus("Processing with AI engine...");
+      setProgress(50);
+      
+      console.log('Making API call to /api/analyze-fallback...');
+      
+      const response = await fetch('/api/analyze-fallback', {
+        method: 'POST',
+        body: formData
+      });
 
-      // Use only the reliable Node.js backend
-      const backendUrls = [
-        '/api/analyze-fallback'  // Always available Node.js backend
-      ];
+      console.log('Response received:', response.status, response.statusText);
 
-      let response = null;
-      let lastError = null;
-
-      for (const url of backendUrls) {
-        try {
-          setStatus("Processing with AI engine...");
-          
-          response = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            break; // Success, exit loop
-          } else {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-        } catch (error) {
-          lastError = error;
-          console.warn(`Backend ${url} failed:`, error);
-          continue; // Try next backend
-        }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', response.status, errorText);
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
       }
 
-      if (!response || !response.ok) {
-        throw lastError || new Error('All backends failed');
-      }
-
-      setStatus("Processing with AI model...");
-      setProgress(60);
+      setStatus("Analyzing results...");
+      setProgress(75);
 
       const result = await response.json();
+      console.log('Analysis result:', result);
       
       if (!result.success) {
-        throw new Error(result.message || 'Analysis failed');
+        throw new Error(result.message || 'Analysis failed on server');
       }
-      
-      setStatus("Finalizing results...");
+
+      setStatus("Finalizing...");
       setProgress(90);
 
-      // Validate the response structure
+      // Simple validation
       if (!result.detections || !result.summary || !result.image_info) {
-        throw new Error('Invalid response format from backend');
+        console.error('Invalid response structure:', result);
+        throw new Error('Server returned incomplete data');
       }
 
       setProgress(100);
 
       setTimeout(() => {
+        console.log('Calling onAnalysisComplete with result');
         onAnalysisComplete(result);
         setProgress(0);
         setStatus("Initializing...");
-      }, 500);
+      }, 800);
 
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error('Error in processImage:', error);
       
-      let errorMessage = "Analysis could not be completed. Please try again.";
-      
-      if (error.name === 'AbortError' || error.message.includes('timeout')) {
-        errorMessage = "Analysis timed out. Please try with a smaller image or wait a moment.";
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('Could not connect')) {
-        errorMessage = "Connection issue detected. The system will automatically retry with backup servers.";
-      } else if (error.message.includes('HTTP 413') || error.message.includes('too large')) {
-        errorMessage = "Image file is too large. Please use an image under 10MB.";
-      } else if (error.message.includes('HTTP 400')) {
-        errorMessage = "Please upload a valid JPEG or PNG X-ray image.";
-      } else if (error.message.includes('All backends failed')) {
-        errorMessage = "All analysis servers are temporarily unavailable. Please try again in a moment.";
-      }
+      // Don't show confusing error messages - keep it simple
+      const errorMessage = "Image analysis could not be completed. Please try uploading the image again.";
       
       toast({
-        title: "Analysis failed",
+        title: "Processing Error",
         description: errorMessage,
         variant: "destructive",
       });
+      
       setProgress(0);
       setStatus("Initializing...");
     }

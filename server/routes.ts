@@ -26,7 +26,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  // Enhanced analysis endpoint with proper file handling
+  // Test endpoint to verify connection
+  app.get('/api/test', (req: Request, res: Response) => {
+    res.json({ 
+      success: true, 
+      message: 'API connection successful',
+      timestamp: new Date().toISOString() 
+    });
+  });
+
+  // Enhanced analysis endpoint with proper file handling  
   app.post('/api/analyze-fallback', async (req: Request, res: Response) => {
     try {
       const startTime = Date.now();
