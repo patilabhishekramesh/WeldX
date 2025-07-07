@@ -59,6 +59,9 @@ class YOLODetector:
         # Apply non-maximum suppression to remove overlapping detections
         filtered_detections = self._apply_nms(detections)
         
+        # Ensure all detections are within image boundaries
+        filtered_detections = self._constrain_to_image_bounds(filtered_detections, image_size)
+        
         return filtered_detections
     
     def _detect_cracks(self, gray_image, image_size):
@@ -371,7 +374,28 @@ class YOLODetector:
                 x, y = i - center, j - center
                 kernel[i, j] = np.exp(-(x**2 + y**2) / (2 * sigma**2))
         
-        return kernel / np.sum(kernel)
+        return kernel
+    
+    def _constrain_to_image_bounds(self, detections, image_size):
+        """Ensure all detections are within image boundaries."""
+        width, height = image_size
+        constrained_detections = []
+        
+        for detection in detections:
+            x, y, w, h = detection['bbox']
+            
+            # Constrain coordinates to image bounds
+            x = max(0, min(x, width - 1))
+            y = max(0, min(y, height - 1))
+            w = max(1, min(w, width - x))
+            h = max(1, min(h, height - y))
+            
+            # Only keep detections that have reasonable size
+            if w >= 10 and h >= 10 and x + w <= width and y + h <= height:
+                detection['bbox'] = [x, y, w, h]
+                constrained_detections.append(detection)
+        
+        return constrained_detections
     
     def _convolve(self, image, kernel):
         """Apply convolution operation."""

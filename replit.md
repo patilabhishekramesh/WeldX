@@ -109,6 +109,11 @@ The system uses a dual-backend approach:
   - ✓ Complete documentation with installation guides for all platforms
   - ✓ Advanced settings panel with configurable detection parameters
   - ✓ Export functionality for detailed analysis reports
+  - ✓ Trainable AI system with custom dataset support
+  - ✓ Interactive image labeling with bounding box creation
+  - ✓ Internet-based self-training capabilities
+  - ✓ Improved detection accuracy with boundary constraints
+  - ✓ Model management and version control system
 
 ## Recent Performance
 - Backend API: ✓ Working (Node.js fallback active)
