@@ -1,38 +1,20 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import type { AnalysisResponse } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Storage interface for welding defect detection system
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  saveAnalysisResult(result: AnalysisResponse): Promise<void>;
+  getAnalysisHistory(): Promise<AnalysisResponse[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  currentId: number;
+  private analysisHistory: AnalysisResponse[] = [];
 
-  constructor() {
-    this.users = new Map();
-    this.currentId = 1;
+  async saveAnalysisResult(result: AnalysisResponse): Promise<void> {
+    this.analysisHistory.push(result);
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getAnalysisHistory(): Promise<AnalysisResponse[]> {
+    return [...this.analysisHistory];
   }
 }
 

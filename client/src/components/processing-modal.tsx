@@ -35,14 +35,42 @@ export default function ProcessingModal({
       const formData = new FormData();
       formData.append('file', uploadedFile);
 
-      // Use the Python backend on port 8000
-      const response = await fetch('http://localhost:8000/api/analyze', {
-        method: 'POST',
-        body: formData,
-      });
+      setStatus("Connecting to AI backend...");
+      setProgress(30);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try multiple backend endpoints
+      const backendUrls = [
+        'http://localhost:8000/api/analyze',
+        '/api/analyze-fallback'  // Fallback to Node.js backend
+      ];
+
+      let response = null;
+      let lastError = null;
+
+      for (const url of backendUrls) {
+        try {
+          setStatus(`Connecting to backend (${url.includes('8000') ? 'Python AI' : 'Node.js'})...`);
+          
+          response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            signal: AbortSignal.timeout(30000) // 30 second timeout
+          });
+
+          if (response.ok) {
+            break; // Success, exit loop
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+        } catch (error) {
+          lastError = error;
+          console.warn(`Backend ${url} failed:`, error);
+          continue; // Try next backend
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw lastError || new Error('All backends failed');
       }
 
       setStatus("Processing with AI model...");
@@ -50,7 +78,18 @@ export default function ProcessingModal({
 
       const result = await response.json();
       
+      if (!result.success) {
+        throw new Error(result.message || 'Analysis failed');
+      }
+      
       setStatus("Finalizing results...");
+      setProgress(90);
+
+      // Validate the response structure
+      if (!result.detections || !result.summary || !result.image_info) {
+        throw new Error('Invalid response format from backend');
+      }
+
       setProgress(100);
 
       setTimeout(() => {
@@ -61,9 +100,22 @@ export default function ProcessingModal({
 
     } catch (error) {
       console.error('Analysis failed:', error);
+      
+      let errorMessage = "Unable to process the image. Please try again.";
+      
+      if (error.name === 'AbortError' || error.message.includes('timeout')) {
+        errorMessage = "Analysis timed out. The image might be too large or the server is busy.";
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Could not connect')) {
+        errorMessage = "Cannot connect to AI backend. Please check if the server is running.";
+      } else if (error.message.includes('HTTP 413') || error.message.includes('too large')) {
+        errorMessage = "Image file is too large. Please use a smaller image (max 10MB).";
+      } else if (error.message.includes('HTTP 400')) {
+        errorMessage = "Invalid image format. Please use JPEG or PNG files.";
+      }
+      
       toast({
         title: "Analysis failed",
-        description: "Unable to process the image. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
       setProgress(0);

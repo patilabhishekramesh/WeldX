@@ -1,0 +1,1 @@
+# Models module for welding defect detection
