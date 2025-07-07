@@ -281,10 +281,10 @@ function generateSimulatedDetections(imageInfo: any) {
           class: 'porosity',
           confidence: 0.75 + Math.random() * 0.15,
           bbox: {
-            x: Math.floor(width * (0.1 + Math.random() * 0.8)),
-            y: Math.floor(height * (0.1 + Math.random() * 0.8)),
-            width: Math.floor(width * (0.05 + Math.random() * 0.05)),
-            height: Math.floor(height * (0.05 + Math.random() * 0.05))
+            x: Math.floor(width * (0.2 + Math.random() * 0.5)),
+            y: Math.floor(height * (0.15 + Math.random() * 0.6)),
+            width: Math.floor(width * (0.04 + Math.random() * 0.04)),
+            height: Math.floor(height * (0.04 + Math.random() * 0.04))
           }
         });
       }
@@ -296,10 +296,10 @@ function generateSimulatedDetections(imageInfo: any) {
         class: 'slag',
         confidence: 0.70 + Math.random() * 0.15,
         bbox: {
-          x: Math.floor(width * (0.1 + Math.random() * 0.7)),
-          y: Math.floor(height * (0.1 + Math.random() * 0.7)),
-          width: Math.floor(width * (0.08 + Math.random() * 0.06)),
-          height: Math.floor(height * (0.04 + Math.random() * 0.04))
+          x: Math.floor(width * (0.2 + Math.random() * 0.5)),
+          y: Math.floor(height * (0.15 + Math.random() * 0.6)),
+          width: Math.floor(width * (0.06 + Math.random() * 0.05)),
+          height: Math.floor(height * (0.03 + Math.random() * 0.03))
         }
       });
     }

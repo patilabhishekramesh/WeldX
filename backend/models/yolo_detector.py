@@ -41,26 +41,46 @@ class YOLODetector:
         else:
             gray = img_array
             
-        # Perform multiple detection algorithms
+        # Detect the actual radiographic content area (exclude dark borders)
+        content_mask = self._detect_radiographic_content(gray)
+        content_bounds = self._get_content_bounds(content_mask)
+        
+        # Only process the actual X-ray content area
+        if content_bounds:
+            x_min, y_min, x_max, y_max = content_bounds
+            roi_gray = gray[y_min:y_max, x_min:x_max]
+            roi_size = (x_max - x_min, y_max - y_min)
+        else:
+            roi_gray = gray
+            roi_size = image.size
+            x_min, y_min = 0, 0
+            
+        # Perform multiple detection algorithms on ROI only
         detections = []
         
         # Detect cracks using edge detection and morphological operations
-        crack_detections = self._detect_cracks(gray, image.size)
+        crack_detections = self._detect_cracks(roi_gray, roi_size)
         detections.extend(crack_detections)
         
         # Detect porosity using blob detection
-        porosity_detections = self._detect_porosity(gray, image.size)
+        porosity_detections = self._detect_porosity(roi_gray, roi_size)
         detections.extend(porosity_detections)
         
         # Detect slag inclusions using intensity analysis
-        slag_detections = self._detect_slag_inclusions(gray, image.size)
+        slag_detections = self._detect_slag_inclusions(roi_gray, roi_size)
         detections.extend(slag_detections)
+        
+        # Adjust detection coordinates back to full image space
+        if content_bounds:
+            for detection in detections:
+                detection['bbox'][0] += x_min  # x coordinate
+                detection['bbox'][1] += y_min  # y coordinate
         
         # Apply non-maximum suppression to remove overlapping detections
         filtered_detections = self._apply_nms(detections)
         
-        # Ensure all detections are within image boundaries
-        filtered_detections = self._constrain_to_image_bounds(filtered_detections, image_size)
+        # Ensure all detections are within content boundaries
+        filtered_detections = self._constrain_to_content_bounds(filtered_detections, image.size, content_bounds)
         
         return filtered_detections
     
@@ -394,6 +414,92 @@ class YOLODetector:
             if w >= 10 and h >= 10 and x + w <= width and y + h <= height:
                 detection['bbox'] = [x, y, w, h]
                 constrained_detections.append(detection)
+        
+        return constrained_detections
+    
+    def _detect_radiographic_content(self, gray_image):
+        """Detect the actual radiographic content area, excluding dark borders."""
+        # Use adaptive thresholding to separate content from background
+        # X-ray images typically have bright content on dark background
+        
+        # Calculate intensity histogram to find optimal threshold
+        hist, bins = np.histogram(gray_image.flatten(), bins=256, range=(0, 256))
+        
+        # Find the threshold that separates dark background from content
+        # Typically around 30-50 for X-ray images
+        cumsum = np.cumsum(hist)
+        total_pixels = gray_image.size
+        
+        # Find threshold where at least 20% of pixels are above (content area)
+        threshold = 30
+        for i in range(len(cumsum)):
+            if cumsum[i] > total_pixels * 0.8:  # 80% dark pixels
+                threshold = i
+                break
+        
+        # Create binary mask of content area
+        content_mask = gray_image > threshold
+        
+        # Apply morphological operations to clean up the mask
+        kernel = np.ones((5, 5), np.uint8)
+        content_mask = self._morphological_closing(content_mask.astype(np.uint8), kernel)
+        
+        return content_mask.astype(bool)
+    
+    def _get_content_bounds(self, content_mask):
+        """Get bounding box of the radiographic content area."""
+        if not np.any(content_mask):
+            return None
+        
+        # Find the bounds of the content area
+        rows = np.any(content_mask, axis=1)
+        cols = np.any(content_mask, axis=0)
+        
+        if not np.any(rows) or not np.any(cols):
+            return None
+        
+        y_min, y_max = np.where(rows)[0][[0, -1]]
+        x_min, x_max = np.where(cols)[0][[0, -1]]
+        
+        # Add small padding to ensure we don't cut off content at edges
+        padding = 10
+        height, width = content_mask.shape
+        
+        y_min = max(0, y_min - padding)
+        y_max = min(height, y_max + padding)
+        x_min = max(0, x_min - padding)
+        x_max = min(width, x_max + padding)
+        
+        return (x_min, y_min, x_max, y_max)
+    
+    def _constrain_to_content_bounds(self, detections, image_size, content_bounds):
+        """Ensure all detections are within the radiographic content area."""
+        if not content_bounds:
+            return self._constrain_to_image_bounds(detections, image_size)
+        
+        x_min_content, y_min_content, x_max_content, y_max_content = content_bounds
+        constrained_detections = []
+        
+        for detection in detections:
+            x, y, w, h = detection['bbox']
+            
+            # Check if detection center is within content bounds
+            center_x = x + w // 2
+            center_y = y + h // 2
+            
+            if (x_min_content <= center_x <= x_max_content and 
+                y_min_content <= center_y <= y_max_content):
+                
+                # Constrain detection to content bounds
+                x = max(x_min_content, min(x, x_max_content - 1))
+                y = max(y_min_content, min(y, y_max_content - 1))
+                w = max(1, min(w, x_max_content - x))
+                h = max(1, min(h, y_max_content - y))
+                
+                # Only keep detections that have reasonable size
+                if w >= 10 and h >= 10:
+                    detection['bbox'] = [x, y, w, h]
+                    constrained_detections.append(detection)
         
         return constrained_detections
     
