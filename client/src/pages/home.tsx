@@ -5,6 +5,7 @@ import UploadZone from "@/components/upload-zone";
 import ImageAnalysis from "@/components/image-analysis";
 import ResultsPanel from "@/components/results-panel";
 import ProcessingModal from "@/components/processing-modal";
+import AdvancedSettings from "@/components/advanced-settings";
 import type { AnalysisResponse } from "@shared/schema";
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);
@@ -61,7 +63,11 @@ export default function Home() {
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                 AI System Ready
               </div>
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              <Button 
+                variant="outline" 
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                onClick={() => setShowAdvancedSettings(true)}
+              >
                 <Cog className="mr-2 w-4 h-4" />
                 Advanced
               </Button>
@@ -103,6 +109,12 @@ export default function Home() {
         isOpen={isProcessing}
         onAnalysisComplete={handleAnalysisResult}
         uploadedFile={uploadedFile}
+      />
+
+      {/* Advanced Settings Modal */}
+      <AdvancedSettings
+        isOpen={showAdvancedSettings}
+        onClose={() => setShowAdvancedSettings(false)}
       />
     </div>
   );

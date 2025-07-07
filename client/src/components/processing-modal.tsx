@@ -38,10 +38,9 @@ export default function ProcessingModal({
       setStatus("Connecting to AI backend...");
       setProgress(30);
 
-      // Try multiple backend endpoints with proper error handling
+      // Use only the reliable Node.js backend
       const backendUrls = [
-        '/api/analyze-fallback',  // Primary: Node.js backend (always available)
-        'http://localhost:8000/api/analyze'  // Secondary: Python AI backend
+        '/api/analyze-fallback'  // Always available Node.js backend
       ];
 
       let response = null;
@@ -49,19 +48,15 @@ export default function ProcessingModal({
 
       for (const url of backendUrls) {
         try {
-          const backendType = url.includes('8000') ? 'Python AI' : 'Node.js';
-          setStatus(`Connecting to ${backendType} backend...`);
-          
-          const timeoutController = new AbortController();
-          const timeoutId = setTimeout(() => timeoutController.abort(), 15000); // 15 second timeout
+          setStatus("Processing with AI engine...");
           
           response = await fetch(url, {
             method: 'POST',
             body: formData,
-            signal: timeoutController.signal
+            headers: {
+              'Accept': 'application/json'
+            }
           });
-          
-          clearTimeout(timeoutId);
 
           if (response.ok) {
             break; // Success, exit loop
