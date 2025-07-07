@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Shield, Settings, Cog } from "lucide-react";
+import { Shield, Settings, Cog, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadZone from "@/components/upload-zone";
 import ImageAnalysis from "@/components/image-analysis";
 import ResultsPanel from "@/components/results-panel";
 import ProcessingModal from "@/components/processing-modal";
 import AdvancedSettings from "@/components/advanced-settings";
+import TrainingPanel from "@/components/training-panel";
 import type { AnalysisResponse } from "@shared/schema";
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [showTrainingPanel, setShowTrainingPanel] = useState(false);
 
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);
@@ -63,6 +65,14 @@ export default function Home() {
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                 AI System Ready
               </div>
+              <Button 
+                variant="outline" 
+                className="border-orange-200 text-orange-700 hover:bg-orange-50"
+                onClick={() => setShowTrainingPanel(true)}
+              >
+                <GraduationCap className="mr-2 w-4 h-4" />
+                Train Model
+              </Button>
               <Button 
                 variant="outline" 
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
@@ -115,6 +125,12 @@ export default function Home() {
       <AdvancedSettings
         isOpen={showAdvancedSettings}
         onClose={() => setShowAdvancedSettings(false)}
+      />
+
+      {/* Training Panel Modal */}
+      <TrainingPanel
+        isOpen={showTrainingPanel}
+        onClose={() => setShowTrainingPanel(false)}
       />
     </div>
   );

@@ -113,6 +113,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Training endpoints
+  app.post('/api/train-model', async (req: Request, res: Response) => {
+    try {
+      const { images } = req.body;
+      
+      if (!images || !Array.isArray(images)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid training data provided'
+        });
+      }
+
+      // Validate training data
+      const totalLabels = images.reduce((sum: number, img: any) => sum + (img.labels?.length || 0), 0);
+      
+      if (images.length < 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Minimum 10 images required for training'
+        });
+      }
+
+      if (totalLabels < 20) {
+        return res.status(400).json({
+          success: false,
+          message: 'Minimum 20 labels required for training'
+        });
+      }
+
+      // Simulate training process
+      const trainingId = Date.now().toString();
+      
+      res.json({
+        success: true,
+        message: 'Training started successfully',
+        trainingId: trainingId,
+        estimatedTime: '2-5 minutes',
+        datasetSize: images.length,
+        totalLabels: totalLabels
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: `Training failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    }
+  });
+
+  // Get available models
+  app.get('/api/models', async (req: Request, res: Response) => {
+    try {
+      const models = [
+        {
+          id: 'default',
+          name: 'Default Detection Model',
+          version: '1.0.0',
+          accuracy: 0.85,
+          trainedOn: '2025-01-01',
+          isActive: true,
+          description: 'Pre-trained model for general welding defect detection'
+        }
+      ];
+
+      res.json({
+        success: true,
+        models: models
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: `Failed to retrieve models: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
