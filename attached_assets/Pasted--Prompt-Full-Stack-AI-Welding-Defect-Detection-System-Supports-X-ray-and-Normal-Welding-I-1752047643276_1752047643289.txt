@@ -1,0 +1,174 @@
+
+## Prompt: Full-Stack AI Welding Defect Detection System
+
+**Supports: X-ray and Normal Welding Images**
+**Tech Stack: React + Flask + YOLOv8 + PostgreSQL**
+
+---
+
+### Project Objective
+
+Build a complete full-stack application that detects welding defects (like cracks, porosity, slag inclusion) in both **radiographic (X-ray)** and **normal RGB images** using an AI model (YOLOv8). The system should provide:
+
+* Image upload through React frontend
+* Backend-based AI inference (Flask with YOLOv8)
+* PostgreSQL storage of uploaded images, labels, and metadata
+* A training pipeline to improve model accuracy over time
+* Saved datasets and model versioning
+* Full integration with backend for analysis (not just frontend-only display)
+
+---
+
+### Core Requirements
+
+#### Frontend (React 18 + TypeScript)
+
+* Drag-and-drop file upload zone with validation
+* Support for both `.jpg`, `.jpeg`, `.png`, and DICOM/X-ray image formats
+* On image submit, send request to Flask backend (`/analyze`) via HTTP POST
+* Display processing modal with real-time status
+* After detection, show:
+
+  * Bounding boxes on image
+  * Labels (crack, porosity, slag inclusion)
+  * Confidence scores
+* Allow user to manually label image (optional)
+* Checkbox to save image to training dataset
+* Toggle between X-ray and normal image mode
+* Handle errors with toast messages
+* Styling with Tailwind CSS and Radix UI (shadcn/ui)
+* State management with React Query
+* Routing with Wouter
+
+---
+
+#### Flask Backend (Python)
+
+* Accept image uploads via `/analyze` endpoint
+* Detect defects using YOLOv8 (pre-trained or custom model)
+* Preprocess image (e.g., contrast enhancement for X-rays)
+* Save original image to `/upload/`
+* If user marks image for training:
+
+  * Save image to `/dataset/images/train/`
+  * Save label in YOLO format (`.txt`) to `/dataset/labels/train/`
+* Return structured JSON:
+
+  ```json
+  {
+    "boxes": [
+      {
+        "label": "crack",
+        "confidence": 0.93,
+        "bbox": [x, y, w, h]
+      }
+    ],
+    "image_id": "unique_id"
+  }
+  ```
+* Support detection of both grayscale and RGB input
+* Include optional CLAHE (contrast enhancement) for better X-ray performance
+
+---
+
+#### Node.js Express (Optional for Replit / Local Dev)
+
+* Serve Vite frontend
+* Proxy `/api/analyze` to Flask backend
+* Hot reload for development
+* Read `.env` variables to point to Flask server
+
+---
+
+### PostgreSQL Integration
+
+* Store detection results and metadata
+* Table schema:
+
+```sql
+Table: training_images
+- id UUID PRIMARY KEY
+- filename TEXT
+- label_type TEXT
+- bbox JSON
+- confidence FLOAT
+- image_type TEXT -- 'xray' or 'normal'
+- saved_to_dataset BOOLEAN
+- uploaded_at TIMESTAMP DEFAULT NOW()
+```
+
+* Insert detection result when:
+
+  * Image is processed
+  * Saved to training dataset
+* Use Drizzle ORM in Node.js or Psycopg in Python for insertion
+
+---
+
+### YOLOv8 Training Pipeline
+
+* Directory Structure:
+
+``
+
+* Training script (`train.py`) should:
+
+  * Read images and labels from `/dataset/`
+  * Split into train/val
+  * Train YOLOv8 using Ultralytics API
+  * Save best model to `/model/best.pt`
+
+* Flask endpoint `/train-model`:
+
+  * Trigger training pipeline
+  * Log training metrics
+  * Update model in memory after training
+
+---
+
+### Environment Variables (.env)
+
+```
+NODE_ENV=development
+VITE_API_URL=http://localhost:8000
+
+FLASK_ENV=development
+UPLOAD_FOLDER=./upload
+DATASET_FOLDER=./dataset
+MODEL_PATH=./model/best.pt
+DATABASE_URL=
+```
+
+---
+
+
+### Feature Checklist
+
+| Feature                                 | Status   |
+| --------------------------------------- | -------- |
+| Upload both X-ray and normal images     | Yes      |
+| Backend-based YOLOv8 detection          | Yes      |
+| Save uploaded images to `upload/`       | Yes      |
+| Save training images and labels         | Yes      |
+| Store detection result in PostgreSQL    | Yes      |
+| CLAHE for X-ray enhancement (optional)  | Yes      |
+| Frontend display with bounding boxes    | Yes      |
+| Real-time modal during processing       | Yes      |
+| Model retraining using collected data   | Yes      |
+| Backend returns structured JSON         | Yes      |
+| Save trained model as `best.pt`         | Yes      |
+| Toggle X-ray vs normal image mode       | Yes      |
+| Label UI and manual bounding box editor | Optional |
+
+---
+
+### Deliverables
+
+* React frontend fully integrated with Flask backend
+* Flask detects defects and saves image + metadata
+* PostgreSQL stores detection result with image metadata
+* Dataset-ready images and labels saved for training
+* YOLOv8 training and retraining pipeline from dataset
+* CLAHE support for grayscale images (X-ray)
+* Training endpoint to trigger model update
+* Clear and responsive UI with good UX and error handling
