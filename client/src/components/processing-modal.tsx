@@ -2,18 +2,27 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { AnalysisResponse } from "@shared/schema";
+import type { AnalysisResponse, ImageMode } from "@shared/schema";
+
+interface AnalysisOptions {
+  imageMode: ImageMode;
+  enhancementMode: 'none' | 'clahe' | 'advanced';
+  saveToDataset: boolean;
+  confidenceThreshold: number;
+}
 
 interface ProcessingModalProps {
   isOpen: boolean;
   onAnalysisComplete: (result: AnalysisResponse) => void;
   uploadedFile: File | null;
+  analysisOptions?: AnalysisOptions;
 }
 
 export default function ProcessingModal({ 
   isOpen, 
   onAnalysisComplete, 
-  uploadedFile 
+  uploadedFile,
+  analysisOptions
 }: ProcessingModalProps) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("Initializing...");
@@ -33,17 +42,39 @@ export default function ProcessingModal({
       setProgress(20);
 
       const formData = new FormData();
-      formData.append('file', uploadedFile);
+      formData.append('image', uploadedFile);
+      
+      // Add analysis options if provided
+      if (analysisOptions) {
+        formData.append('imageMode', analysisOptions.imageMode);
+        formData.append('enhancementMode', analysisOptions.enhancementMode);
+        formData.append('saveToDataset', analysisOptions.saveToDataset.toString());
+        formData.append('confidenceThreshold', analysisOptions.confidenceThreshold.toString());
+      }
 
-      setStatus("Processing with AI engine...");
+      const statusMessage = analysisOptions?.enhancementMode === 'clahe' 
+        ? "Processing with CLAHE enhancement..." 
+        : "Processing with AI engine...";
+      
+      setStatus(statusMessage);
       setProgress(50);
       
-      console.log('Making API call to /api/analyze-fallback...');
+      console.log('Making API call to /api/analyze...');
       
-      const response = await fetch('/api/analyze-fallback', {
-        method: 'POST',
-        body: formData
-      });
+      // Try the enhanced API endpoint first, then fallback
+      let response;
+      try {
+        response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData
+        });
+      } catch (error) {
+        console.log('Enhanced API failed, falling back to /api/analyze-fallback...');
+        response = await fetch('/api/analyze-fallback', {
+          method: 'POST',
+          body: formData
+        });
+      }
 
       console.log('Response received:', response.status, response.statusText);
 

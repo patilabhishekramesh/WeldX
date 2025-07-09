@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { Shield, Settings, Cog, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import UploadZone from "@/components/upload-zone";
+import EnhancedUploadZone from "@/components/enhanced-upload-zone";
 import ImageAnalysis from "@/components/image-analysis";
 import ResultsPanel from "@/components/results-panel";
 import ProcessingModal from "@/components/processing-modal";
 import AdvancedSettings from "@/components/advanced-settings";
 import TrainingPanel from "@/components/training-panel";
-import type { AnalysisResponse } from "@shared/schema";
+import type { AnalysisResponse, ImageMode } from "@shared/schema";
+
+interface AnalysisOptions {
+  imageMode: ImageMode;
+  enhancementMode: 'none' | 'clahe' | 'advanced';
+  saveToDataset: boolean;
+  confidenceThreshold: number;
+}
 
 export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -16,9 +23,11 @@ export default function Home() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [showTrainingPanel, setShowTrainingPanel] = useState(false);
+  const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptions | null>(null);
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = (file: File, options: AnalysisOptions) => {
     setUploadedFile(file);
+    setAnalysisOptions(options);
     setAnalysisResult(null);
     
     // Create image preview
@@ -90,7 +99,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Upload and Analysis Section */}
           <div className="lg:col-span-2 space-y-6">
-            <UploadZone 
+            <EnhancedUploadZone 
               onFileUpload={handleFileUpload}
               onProcessingStart={handleProcessingStart}
             />
@@ -119,6 +128,7 @@ export default function Home() {
         isOpen={isProcessing}
         onAnalysisComplete={handleAnalysisResult}
         uploadedFile={uploadedFile}
+        analysisOptions={analysisOptions}
       />
 
       {/* Advanced Settings Modal */}
