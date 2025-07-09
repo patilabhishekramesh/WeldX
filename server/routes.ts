@@ -142,45 +142,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user already exists
-      const existingUser = await db.select().from(users).where(
-        eq(users.username, username)
-      ).limit(1);
+      try {
+        const existingUser = await db.select().from(users).where(
+          eq(users.username, username)
+        ).limit(1);
 
-      if (existingUser.length > 0) {
-        return res.status(400).json({ message: 'Username already exists' });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create user
-      const newUser = await db.insert(users).values([{
-        username,
-        email,
-        password: hashedPassword,
-        role: 'user'
-      }]).returning();
-
-      // Create session
-      const sessionToken = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-      await db.insert(sessions).values([{
-        userId: newUser[0].id,
-        token: sessionToken,
-        expiresAt
-      }]);
-
-      res.status(201).json({
-        message: 'User registered successfully',
-        token: sessionToken,
-        user: {
-          id: newUser[0].id,
-          username: newUser[0].username,
-          email: newUser[0].email,
-          role: newUser[0].role
+        if (existingUser.length > 0) {
+          return res.status(400).json({ message: 'Username already exists' });
         }
-      });
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user
+        const newUser = await db.insert(users).values([{
+          username,
+          email,
+          password: hashedPassword,
+          role: 'user'
+        }]).returning();
+
+        // Create session
+        const sessionToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        await db.insert(sessions).values([{
+          userId: newUser[0].id,
+          token: sessionToken,
+          expiresAt
+        }]);
+
+        res.status(201).json({
+          message: 'User registered successfully',
+          token: sessionToken,
+          user: {
+            id: newUser[0].id,
+            username: newUser[0].username,
+            email: newUser[0].email,
+            role: newUser[0].role
+          }
+        });
+      } catch (dbError) {
+        console.error('Database error in registration:', dbError);
+        return res.status(500).json({ message: 'Registration failed due to database error' });
+      }
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ message: 'Registration failed' });
@@ -196,40 +201,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Username and password are required' });
       }
 
-      // Find user
-      const user = await db.select().from(users).where(eq(users.username, username)).limit(1);
+      try {
+        // Find user
+        const user = await db.select().from(users).where(eq(users.username, username)).limit(1);
 
-      if (user.length === 0) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      // Check password
-      const isValidPassword = await bcrypt.compare(password, user[0].password);
-
-      if (!isValidPassword) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      // Create session
-      const sessionToken = crypto.randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-      await db.insert(sessions).values([{
-        userId: user[0].id,
-        token: sessionToken,
-        expiresAt
-      }]);
-
-      res.json({
-        message: 'Login successful',
-        token: sessionToken,
-        user: {
-          id: user[0].id,
-          username: user[0].username,
-          email: user[0].email,
-          role: user[0].role
+        if (user.length === 0) {
+          return res.status(401).json({ message: 'Invalid credentials' });
         }
-      });
+
+        // Check password
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
+
+        if (!isValidPassword) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Create session
+        const sessionToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        await db.insert(sessions).values([{
+          userId: user[0].id,
+          token: sessionToken,
+          expiresAt
+        }]);
+
+        res.json({
+          message: 'Login successful',
+          token: sessionToken,
+          user: {
+            id: user[0].id,
+            username: user[0].username,
+            email: user[0].email,
+            role: user[0].role
+          }
+        });
+      } catch (dbError) {
+        console.error('Database error in login:', dbError);
+        return res.status(500).json({ message: 'Login failed due to database error' });
+      }
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ message: 'Login failed' });
@@ -264,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced analysis endpoint with image mode and CLAHE support
-  app.post('/api/analyze', upload.single('image'), async (req: Request, res: Response) => {
+  app.post('/api/analyze', upload.single('file'), async (req: Request, res: Response) => {
     try {
       const startTime = Date.now();
       
@@ -330,11 +340,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Save analysis result to database
-      await storage.saveAnalysisResult(response, imageMode, enhancementMode === 'clahe');
+      try {
+        await storage.saveAnalysisResult(response, imageMode, enhancementMode === 'clahe');
+      } catch (dbError) {
+        console.warn('Database save failed, continuing with analysis:', dbError);
+      }
       
       // Save to training dataset if requested
       if (saveToDataset) {
-        await saveToTrainingDataset(req.file, detections, imageMode, originalPath);
+        try {
+          await saveToTrainingDataset(req.file, detections, imageMode, originalPath);
+        } catch (saveError) {
+          console.warn('Training dataset save failed:', saveError);
+        }
       }
       
       res.json(response);

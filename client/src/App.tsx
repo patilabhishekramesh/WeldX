@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={HomePage} />
+      <Route path="/" component={Home} />
       <Route path="/database" component={DatabaseGUI} />
       <Route path="/admin" component={LoginPage} />
       <Route component={NotFound} />
