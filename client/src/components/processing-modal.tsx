@@ -42,7 +42,7 @@ export default function ProcessingModal({
       setProgress(20);
 
       const formData = new FormData();
-      formData.append('image', uploadedFile);
+      formData.append('file', uploadedFile);
       
       // Add analysis options if provided
       if (analysisOptions) {

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -26,7 +27,19 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { username: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/login", data);
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -49,7 +62,19 @@ export default function LoginPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: { username: string; email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/register", data);
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -96,6 +121,18 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+            <div></div>
+          </div>
           <CardTitle className="text-2xl font-bold">
             {isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>

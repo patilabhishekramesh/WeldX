@@ -33,7 +33,15 @@ function validateImageFile(file: MulterFile): boolean {
   const isValidType = allowedTypes.includes(file.mimetype) || 
                      file.originalname.toLowerCase().endsWith('.dcm');
   
-  return isValidType && file.size <= maxSize;
+  console.log('File validation details:', {
+    mimetype: file.mimetype,
+    filename: file.originalname,
+    size: file.size,
+    isValidType,
+    sizeValid: (file.size || 0) <= maxSize
+  });
+  
+  return isValidType && (file.size || 0) <= maxSize;
 }
 
 // Setup multer for file uploads
@@ -55,7 +63,13 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
   fileFilter: (req, file, cb) => {
-    cb(null, validateImageFile(file));
+    console.log('Processing file:', file.originalname, 'mimetype:', file.mimetype);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG and PNG files are allowed.'));
+    }
   },
 });
 
@@ -274,96 +288,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced analysis endpoint with image mode and CLAHE support
-  app.post('/api/analyze', upload.single('file'), async (req: Request, res: Response) => {
-    try {
-      const startTime = Date.now();
-      
-      if (!req.file) {
-        return res.status(400).json({
+  app.post('/api/analyze', (req: Request, res: Response) => {
+    upload.single('file')(req, res, async (err) => {
+      if (err) {
+        console.error('Upload error:', err);
+        return res.status(500).json({
           success: false,
-          message: 'No image file uploaded'
+          message: 'File upload failed: ' + err.message
         });
       }
-
-      // Parse analysis options
-      const imageMode: ImageMode = req.body.imageMode || 'xray';
-      const enhancementMode = req.body.enhancementMode || 'none';
-      const saveToDataset = req.body.saveToDataset === 'true';
-      const confidenceThreshold = parseFloat(req.body.confidenceThreshold) || 0.5;
       
-      // Save original image to uploads folder
-      const timestamp = Date.now();
-      const originalPath = path.join('uploads', `${timestamp}_${req.file.originalname}`);
-      await fs.promises.writeFile(originalPath, req.file.buffer);
-      
-      // Get image info
-      const imageInfo = {
-        filename: req.file.originalname,
-        width: 1024 + Math.floor(Math.random() * 512),
-        height: 768 + Math.floor(Math.random() * 384),
-        format: req.file.mimetype.split('/')[1].toUpperCase(),
-        size_bytes: req.file.size
-      };
-
-      // Generate detections based on image mode and enhancement
-      const detections = generateEnhancedDetections(imageInfo, imageMode, enhancementMode, confidenceThreshold);
-      
-      // Calculate summary statistics
-      const defectTypes: Record<string, number> = {};
-      let totalConfidence = 0;
-      
-      detections.forEach(detection => {
-        defectTypes[detection.class] = (defectTypes[detection.class] || 0) + 1;
-        totalConfidence += detection.confidence;
-      });
-      
-      const averageConfidence = detections.length > 0 ? totalConfidence / detections.length : 0;
-      const processingTime = (Date.now() - startTime) / 1000;
-
-      const response = {
-        success: true,
-        message: `Analysis completed successfully${enhancementMode === 'clahe' ? ' with CLAHE enhancement' : ''}`,
-        image_info: imageInfo,
-        detections: detections.map(d => ({
-          ...d,
-          center: {
-            x: d.bbox.x + d.bbox.width / 2,
-            y: d.bbox.y + d.bbox.height / 2
-          }
-        })),
-        summary: {
-          total_defects: detections.length,
-          defect_types: defectTypes,
-          average_confidence: averageConfidence,
-          processing_time: processingTime
-        }
-      };
-
-      // Save analysis result to database
       try {
-        await storage.saveAnalysisResult(response, imageMode, enhancementMode === 'clahe');
-      } catch (dbError) {
-        console.warn('Database save failed, continuing with analysis:', dbError);
-      }
-      
-      // Save to training dataset if requested
-      if (saveToDataset) {
-        try {
-          await saveToTrainingDataset(req.file, detections, imageMode, originalPath);
-        } catch (saveError) {
-          console.warn('Training dataset save failed:', saveError);
+        const startTime = Date.now();
+        
+        console.log('Request received. File:', req.file ? 'Present' : 'Missing');
+        console.log('Request body:', req.body);
+        
+        if (!req.file) {
+          console.log('No file uploaded in request');
+          return res.status(400).json({
+            success: false,
+            message: 'No image file uploaded'
+          });
         }
+        
+        console.log('File details:', {
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size
+        });
+
+        // Parse analysis options
+        const imageMode: ImageMode = req.body.imageMode || 'xray';
+        const enhancementMode = req.body.enhancementMode || 'none';
+        const saveToDataset = req.body.saveToDataset === 'true';
+        const confidenceThreshold = parseFloat(req.body.confidenceThreshold) || 0.5;
+        
+        // Save original image to uploads folder
+        const timestamp = Date.now();
+        const originalPath = path.join('uploads', `${timestamp}_${req.file.originalname}`);
+        await fs.promises.writeFile(originalPath, req.file.buffer);
+        
+        // Get image info
+        const imageInfo = {
+          filename: req.file.originalname,
+          width: 1024 + Math.floor(Math.random() * 512),
+          height: 768 + Math.floor(Math.random() * 384),
+          format: req.file.mimetype.split('/')[1].toUpperCase(),
+          size_bytes: req.file.size
+        };
+
+        // Generate detections based on image mode and enhancement
+        const detections = generateEnhancedDetections(imageInfo, imageMode, enhancementMode, confidenceThreshold);
+        
+        // Calculate summary statistics
+        const defectTypes: Record<string, number> = {};
+        let totalConfidence = 0;
+        
+        detections.forEach(detection => {
+          defectTypes[detection.class] = (defectTypes[detection.class] || 0) + 1;
+          totalConfidence += detection.confidence;
+        });
+        
+        const averageConfidence = detections.length > 0 ? totalConfidence / detections.length : 0;
+        const processingTime = (Date.now() - startTime) / 1000;
+
+        const response = {
+          success: true,
+          message: `Analysis completed successfully${enhancementMode === 'clahe' ? ' with CLAHE enhancement' : ''}`,
+          image_info: imageInfo,
+          detections: detections.map(d => ({
+            ...d,
+            center: {
+              x: d.bbox.x + d.bbox.width / 2,
+              y: d.bbox.y + d.bbox.height / 2
+            }
+          })),
+          summary: {
+            total_defects: detections.length,
+            defect_types: defectTypes,
+            average_confidence: averageConfidence,
+            processing_time: processingTime
+          }
+        };
+
+        // Save analysis result to database
+        try {
+          await storage.saveAnalysisResult(response, imageMode, enhancementMode === 'clahe');
+        } catch (dbError) {
+          console.warn('Database save failed, continuing with analysis:', dbError);
+        }
+        
+        // Save to training dataset if requested
+        if (saveToDataset) {
+          try {
+            await saveToTrainingDataset(req.file, detections, imageMode, originalPath);
+          } catch (saveError) {
+            console.warn('Training dataset save failed:', saveError);
+          }
+        }
+        
+        res.json(response);
+        
+      } catch (error) {
+        console.error('Analysis failed:', error);
+        res.status(500).json({
+          success: false,
+          message: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        });
       }
-      
-      res.json(response);
-      
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      res.status(500).json({
-        success: false,
-        message: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    }
+    });
   });
 
   // Fallback analysis endpoint for development
