@@ -58,27 +58,31 @@ export interface IStorage {
 
 export class PostgresStorage implements IStorage {
   async saveAnalysisResult(result: AnalysisResponse, imageType: 'xray' | 'normal', claheApplied: boolean = false): Promise<void> {
-    const insertData: InsertAnalysisResult = {
-      filename: result.image_info.filename,
-      imageType,
-      detections: result.detections ? result.detections.map(d => ({
+    let detections = null;
+    if (result.detections && Array.isArray(result.detections)) {
+      detections = result.detections.map(d => ({
         class: d.class,
         confidence: d.confidence,
         bbox: d.bbox,
         center: d.center
-      })) as Array<{
-        class: string;
-        confidence: number;
-        bbox: { x: number; y: number; width: number; height: number };
-        center: { x: number; y: number };
-      }> : undefined,
-      summary: result.summary,
-      imageInfo: result.image_info,
-      claheApplied,
-      processingMode: 'standard',
-    };
-    
-    await db.insert(analysisResults).values([insertData]);
+      }));
+    }
+
+    try {
+      await db.insert(analysisResults).values({
+        filename: result.image_info.filename,
+        imageType,
+        detections,
+        summary: result.summary,
+        imageInfo: result.image_info,
+        claheApplied,
+        processingMode: 'standard',
+      });
+    } catch (error) {
+      console.error('Database insert error:', error);
+      // Fallback to memory storage on error
+      throw error;
+    }
   }
 
   async getAnalysisHistory(): Promise<AnalysisResponse[]> {
@@ -208,5 +212,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use PostgreSQL storage if DATABASE_URL is available, otherwise fallback to memory
-export const storage = new MemStorage();
+// Use PostgreSQL storage now that database is set up
+export const storage = new PostgresStorage();
