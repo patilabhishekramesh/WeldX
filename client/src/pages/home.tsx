@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Shield, Settings, Cog, GraduationCap } from "lucide-react";
+import { Shield, Settings, Cog, GraduationCap, Database, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import EnhancedUploadZone from "@/components/enhanced-upload-zone";
 import ImageAnalysis from "@/components/image-analysis";
 import ResultsPanel from "@/components/results-panel";
@@ -24,6 +26,10 @@ export default function Home() {
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [showTrainingPanel, setShowTrainingPanel] = useState(false);
   const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptions | null>(null);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+
 
   const handleFileUpload = (file: File, options: AnalysisOptions) => {
     setUploadedFile(file);
@@ -74,6 +80,7 @@ export default function Home() {
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                 AI System Ready
               </div>
+
               <Button 
                 variant="outline" 
                 className="border-orange-200 text-orange-700 hover:bg-orange-50"
@@ -90,6 +97,7 @@ export default function Home() {
                 <Cog className="mr-2 w-4 h-4" />
                 Advanced
               </Button>
+
             </div>
           </div>
         </div>
@@ -142,6 +150,26 @@ export default function Home() {
         isOpen={showTrainingPanel}
         onClose={() => setShowTrainingPanel(false)}
       />
+
+      {/* Footer */}
+      <footer className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              AI Welding Defect Detection System - Training Data Management
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setLocation("/admin")}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
+            >
+              <Database className="mr-2 w-4 h-4" />
+              Database Access
+            </Button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

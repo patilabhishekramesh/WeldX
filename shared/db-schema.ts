@@ -3,6 +3,26 @@ import { pgTable, uuid, text, json, real, boolean, timestamp, integer } from "dr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table for authentication
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  role: text("role").default('user'), // 'admin', 'user'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Session table for user sessions
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Training images table as specified in the prompt
 export const trainingImages = pgTable("training_images", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -97,6 +117,18 @@ export const insertTrainingDatasetSchema = createInsertSchema(trainingDatasets).
   createdAt: true,
 });
 
+// User schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSessionSchema = createInsertSchema(sessions).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type TrainingImage = typeof trainingImages.$inferSelect;
 export type InsertTrainingImage = z.infer<typeof insertTrainingImageSchema>;
@@ -109,3 +141,9 @@ export type InsertModel = z.infer<typeof insertModelSchema>;
 
 export type TrainingDataset = typeof trainingDatasets.$inferSelect;
 export type InsertTrainingDataset = z.infer<typeof insertTrainingDatasetSchema>;
+
+// User types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionSchema>;

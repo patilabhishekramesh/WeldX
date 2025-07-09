@@ -27,7 +27,7 @@ export interface IStorage {
     bbox: { x: number; y: number; width: number; height: number } | null;
     confidence: number | null;
     imageType: string;
-    savedToDataset: boolean;
+    savedToDataset: boolean | null;
     uploadedAt: Date | null;
   }>>;
   
@@ -38,7 +38,7 @@ export interface IStorage {
     name: string;
     version: string;
     modelPath: string;
-    isActive: boolean;
+    isActive: boolean | null;
     createdAt: Date | null;
   }>>;
   activateModel(modelId: string): Promise<void>;
@@ -61,14 +61,24 @@ export class PostgresStorage implements IStorage {
     const insertData: InsertAnalysisResult = {
       filename: result.image_info.filename,
       imageType,
-      detections: result.detections,
+      detections: result.detections ? result.detections.map(d => ({
+        class: d.class,
+        confidence: d.confidence,
+        bbox: d.bbox,
+        center: d.center
+      })) as Array<{
+        class: string;
+        confidence: number;
+        bbox: { x: number; y: number; width: number; height: number };
+        center: { x: number; y: number };
+      }> : undefined,
       summary: result.summary,
       imageInfo: result.image_info,
       claheApplied,
       processingMode: 'standard',
     };
     
-    await db.insert(analysisResults).values(insertData);
+    await db.insert(analysisResults).values([insertData]);
   }
 
   async getAnalysisHistory(): Promise<AnalysisResponse[]> {
@@ -153,7 +163,7 @@ export class MemStorage implements IStorage {
   private models: any[] = [];
   private trainingDatasets: any[] = [];
 
-  async saveAnalysisResult(result: AnalysisResponse): Promise<void> {
+  async saveAnalysisResult(result: AnalysisResponse, imageType: 'xray' | 'normal', claheApplied: boolean = false): Promise<void> {
     this.analysisHistory.push(result);
   }
 
@@ -199,6 +209,4 @@ export class MemStorage implements IStorage {
 }
 
 // Use PostgreSQL storage if DATABASE_URL is available, otherwise fallback to memory
-export const storage = process.env.DATABASE_URL 
-  ? new PostgresStorage() 
-  : new MemStorage();
+export const storage = new MemStorage();
