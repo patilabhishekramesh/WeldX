@@ -1,6 +1,7 @@
 import os
 import io
 import time
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -89,6 +90,13 @@ def analyze_image():
             'size_bytes': len(image_data)
         }
         
+        # Save uploaded image to /upload/
+        upload_dir = os.environ.get("UPLOAD_FOLDER", "upload")
+        os.makedirs(upload_dir, exist_ok=True)
+        image_save_path = os.path.join(upload_dir, image_info['filename'])
+        with open(image_save_path, "wb") as f:
+            f.write(image_data)
+
         # Get analysis parameters from request
         enhancement_mode = request.form.get('enhancement_mode', 'advanced')
         confidence_threshold = float(request.form.get('confidence_threshold', 0.5))
@@ -103,6 +111,22 @@ def analyze_image():
         # Process results
         processed_results = image_processor.process_detections(detections, image.width, image.height)
         
+        # Optionally save to dataset if requested
+        save_to_dataset = request.form.get('saveToDataset', 'false').lower() == 'true'
+        if save_to_dataset and processed_results['detections']:
+            dataset_img_dir = os.path.join("dataset", "images", "train")
+            dataset_label_dir = os.path.join("dataset", "labels", "train")
+            os.makedirs(dataset_img_dir, exist_ok=True)
+            os.makedirs(dataset_label_dir, exist_ok=True)
+            # Save image
+            dataset_img_path = os.path.join(dataset_img_dir, image_info['filename'])
+            with open(dataset_img_path, "wb") as f:
+                f.write(image_data)
+            # Save label JSON
+            label_json_path = os.path.join(dataset_label_dir, image_info['filename'].rsplit('.', 1)[0] + ".json")
+            with open(label_json_path, "w") as f:
+                json.dump(processed_results['detections'], f, indent=2)
+
         # Calculate processing time
         processing_time = time.time() - start_time
         
@@ -132,18 +156,23 @@ def analyze_image():
 def train_model():
     """Train a new model with uploaded training data."""
     try:
-        # Get training data from request
-        training_data = request.json.get('training_data', [])
-        model_config = request.json.get('config', {})
-        
-        if not training_data:
+        # Accepts JSON with 'images' key (array of images with labels)
+        images_data = request.json.get('images', [])
+        if not images_data:
             return jsonify({
                 'success': False,
                 'message': 'No training data provided'
             }), 400
-        
+
+        # Save dataset JSON for traceability
+        dataset_dir = os.path.join("dataset", "frontend_upload")
+        os.makedirs(dataset_dir, exist_ok=True)
+        dataset_json_path = os.path.join(dataset_dir, f"dataset_{int(time.time())}.json")
+        with open(dataset_json_path, "w") as f:
+            json.dump(images_data, f, indent=2)
+
         # Prepare dataset
-        dataset_info = training_system.prepare_training_dataset(training_data)
+        dataset_info = training_system.prepare_training_dataset(images_data)
         
         if dataset_info['total_features'] == 0:
             return jsonify({
@@ -152,7 +181,7 @@ def train_model():
             }), 400
         
         # Train model
-        training_result = training_system.train_model(dataset_info['dataset_id'], model_config)
+        training_result = training_system.train_model(dataset_info['dataset_id'], {})
         
         return jsonify({
             'success': training_result['success'],
