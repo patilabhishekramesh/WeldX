@@ -340,4 +340,5 @@ For support, issues, or feature requests, please create an issue in the GitHub r
 
 ---
 
-**Note**: This system is designed for demonstration and educational purposes. For production welding inspection, ensure proper calibration and validation with certified welding standards.
+**Note**: This system is designed for demonstration and educational purposes. For production welding inspection, ensure proper calibration and validation with certified welding standards.#   W e l d X  
+ 
