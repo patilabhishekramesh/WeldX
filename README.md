@@ -1,343 +1,209 @@
 # AI Welding Defect Detection System
 
-A full-stack AI-powered system for detecting and analyzing welding defects in radiographic (X-ray) images. Built with React, Node.js, Python, and advanced image processing algorithms.
+A full-stack AI-powered system for detecting and analyzing welding defects in images.  
+Built with **React, Node.js, Python**, and advanced image processing algorithms.
 
-## Features
+## 🚀 Features
+- **Real-time Defect Detection**: Detects cracks, porosity, and slag inclusions  
+- **Advanced Image Processing**: Algorithms including edge detection, morphological operations, and blob detection  
+- **Interactive Visualization**: Visual overlay of detected defects with bounding boxes and confidence scores  
+- **Professional UI**: Modern, responsive interface with dark/light mode support  
+- **Detailed Analysis Reports**: Exportable reports with recommendations and detailed findings  
+- **Advanced Settings**: Configurable detection sensitivity, analysis modes, and confidence thresholds  
+- **Dual Backend Architecture**: Python AI engine with Node.js fallback for reliability  
 
-- **Real-time Defect Detection**: Detects cracks, porosity, and slag inclusions in X-ray images
-- **Advanced Image Processing**: Sophisticated algorithms including edge detection, morphological operations, and blob detection
-- **Interactive Visualization**: Visual overlay of detected defects with bounding boxes and confidence scores
-- **Professional UI**: Modern, responsive interface with dark/light mode support
-- **Detailed Analysis Reports**: Exportable reports with recommendations and detailed findings
-- **Advanced Settings**: Configurable detection sensitivity, analysis modes, and confidence thresholds
-- **Dual Backend Architecture**: Python AI engine with Node.js fallback for reliability
-
-## Technology Stack
-
+## 🛠️ Technology Stack
 ### Frontend
-- **React 18** with TypeScript
-- **Tailwind CSS** for styling
-- **Radix UI** components for accessibility
-- **TanStack React Query** for state management
-- **Wouter** for client-side routing
-- **Vite** for build tooling
+- React 18 with TypeScript  
+- Tailwind CSS  
+- Radix UI components (accessibility)  
+- TanStack React Query (state management)  
+- Wouter (client-side routing)  
+- Vite (build tooling)  
 
 ### Backend
-- **Node.js/Express** for API server
-- **Python Flask** for AI processing
-- **Advanced Image Processing** with custom algorithms
-- **Multi-format Support** (JPEG, PNG)
+- Node.js/Express (API server)  
+- Python Flask (AI processing)  
+- Advanced image processing with custom algorithms  
+- Multi-format support (JPEG, PNG)  
 
-## Prerequisites
+## 📦 Prerequisites
+- Node.js (v18+)  
+- npm (comes with Node.js)  
+- Python (v3.11+)  
+- Git  
 
-Before installation, ensure you have the following installed:
-
-- **Node.js** (version 18 or higher)
-- **npm** (comes with Node.js)
-- **Python** (version 3.11 or higher)
-- **Git** (for cloning the repository)
-
-## Local Installation
-
-### 1. Clone the Repository
-
+## ⚙️ Installation
 ```bash
+# Clone the repository
 git clone <repository-url>
 cd ai-welding-defect-detection
-```
 
-### 2. Install Frontend Dependencies
-
-```bash
+# Install frontend dependencies
 npm install
-```
 
-### 3. Install Python Dependencies
-
-```bash
+# Install Python dependencies
 cd backend
 pip install -r requirements.txt
 cd ..
 ```
 
-### 4. Environment Setup
-
-Create a `.env` file in the root directory (optional):
-
-```env
-NODE_ENV=development
-PORT=5000
-PYTHON_BACKEND_PORT=8000
-```
-
-## Running the Application
-
+## ▶️ Running the Application
 ### Option 1: Full Stack (Recommended)
-
-Start both the Node.js server and Python backend:
-
 ```bash
 # Terminal 1: Start the main application
 npm run dev
 
-# Terminal 2: Start the Python AI backend (optional for enhanced processing)
+# Terminal 2: Start the Python AI backend
 cd backend
 python app.py
 ```
 
 ### Option 2: Node.js Only
-
-The application includes a fallback system that works without the Python backend:
-
 ```bash
 npm run dev
 ```
+👉 The app will be available at: **http://localhost:5000**
 
-The application will be available at `http://localhost:5000`
-
-## Project Structure
-
+## 📂 Project Structure
 ```
 ai-welding-defect-detection/
 ├── client/                    # React frontend
 │   ├── src/
-│   │   ├── components/       # React components
-│   │   │   ├── ui/          # Reusable UI components
+│   │   ├── components/       
+│   │   │   ├── ui/          
 │   │   │   ├── upload-zone.tsx
 │   │   │   ├── image-analysis.tsx
 │   │   │   ├── results-panel.tsx
 │   │   │   ├── processing-modal.tsx
 │   │   │   └── advanced-settings.tsx
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utility functions
-│   │   └── main.tsx         # Entry point
+│   │   ├── pages/           
+│   │   ├── hooks/           
+│   │   ├── lib/             
+│   │   └── main.tsx         
 │   └── index.html
 ├── server/                   # Node.js backend
-│   ├── routes.ts            # API routes
-│   ├── storage.ts           # Data storage
-│   ├── index.ts             # Server entry point
-│   └── vite.ts              # Vite configuration
+│   ├── routes.ts            
+│   ├── storage.ts           
+│   ├── index.ts             
+│   └── vite.ts              
 ├── backend/                  # Python AI backend
-│   ├── app.py               # Flask application
+│   ├── app.py               
 │   ├── models/
-│   │   └── yolo_detector.py # AI detection engine
+│   │   └── yolo_detector.py 
 │   ├── utils/
-│   │   └── image_processor.py # Image processing utilities
-│   └── requirements.txt     # Python dependencies
+│   │   └── image_processor.py 
+│   └── requirements.txt     
 ├── shared/
-│   └── schema.ts            # Shared TypeScript types
-├── package.json             # Node.js dependencies
+│   └── schema.ts            
+├── package.json             
 └── README.md
 ```
 
-## Usage
-
-### 1. Upload X-Ray Image
-- Drag and drop or click to select an X-ray image (JPEG/PNG, max 10MB)
-- Supported formats: `.jpg`, `.jpeg`, `.png`
-- Recommended: High-resolution radiographic images
+## 📊 Usage
+### 1. Upload Image
+- Drag and drop or click to select an image (`.jpg`, `.jpeg`, `.png`, max 10MB)  
+- High-resolution images recommended  
 
 ### 2. Analysis Process
-- The system automatically processes the image using AI algorithms
-- Real-time progress updates during analysis
-- Processing typically takes 2-5 seconds
+- The AI automatically processes the image  
+- Real-time progress updates  
+- Typical processing time: **2–5s**  
 
 ### 3. View Results
-- Visual overlay showing detected defects with colored bounding boxes
-- Detailed results panel with:
-  - Defect count and types
-  - Confidence scores
-  - Individual defect details
-  - Processing statistics
+- Defect overlay with bounding boxes  
+- Results panel showing:  
+  - Defect types & count  
+  - Confidence scores  
+  - Processing stats  
 
 ### 4. Advanced Features
-- **Advanced Settings**: Configure detection sensitivity and analysis modes
-- **Export Reports**: Download detailed analysis reports
-- **Multiple Analysis**: Process multiple images sequentially
+- Configurable **detection sensitivity**  
+- Multiple **analysis modes**  
+- Export reports  
+- Batch analysis  
 
-## Defect Types Detected
+## 🔎 Defect Types Detected
+1. **Cracks** (Red overlay)  
+   - Linear, stress, heat-affected zone cracks  
+2. **Porosity** (Yellow overlay)  
+   - Gas pockets, wormhole porosity, clustered porosity  
+3. **Slag Inclusions** (Orange overlay)  
+   - Non-metallic inclusions, trapped slag, oxidation defects  
 
-The system can identify the following welding defects:
+## ⚙️ Configuration
+- **Detection Sensitivity** (25–100%)  
+- **Analysis Modes**: Fast, Standard, Thorough, Critical  
+- **Defect Toggles**: Enable/disable specific defect types  
+- **Confidence Threshold** customization  
 
-1. **Cracks** (Red overlay)
-   - Linear discontinuities
-   - Stress cracks
-   - Heat-affected zone cracks
+## 📡 API Endpoints
+- `GET /api/test` → Health check  
+- `POST /api/analyze-fallback` → Node.js-based image analysis  
+- `POST /api/analyze` → Python AI backend analysis  
+- `GET /api/history` → Analysis history  
 
-2. **Porosity** (Yellow overlay)
-   - Gas pockets
-   - Wormhole porosity
-   - Clustered porosity
-
-3. **Slag Inclusions** (Orange overlay)
-   - Non-metallic inclusions
-   - Trapped slag
-   - Oxidation defects
-
-## Configuration
-
-### Advanced Settings
-
-Access the Advanced Settings panel to configure:
-
-- **Detection Sensitivity**: Adjust from 25% to 100%
-- **Analysis Mode**: 
-  - Fast Scan (30s)
-  - Standard (60s) - Recommended
-  - Thorough (120s)
-  - Critical Inspection (180s)
-- **Defect Type Toggles**: Enable/disable specific defect detection
-- **Confidence Threshold**: Set minimum confidence for reporting defects
-
-### API Endpoints
-
-- `GET /api/test` - API health check
-- `POST /api/analyze-fallback` - Image analysis (Node.js backend)
-- `POST /api/analyze` - Image analysis (Python backend, if available)
-- `GET /api/history` - Analysis history
-
-## Development
-
-### Available Scripts
-
+## 🛠️ Development
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run type-check   # TypeScript type checking
+npm run dev        # Start dev server
+npm run build      # Build for production
+npm run preview    # Preview production build
+npm run type-check # TypeScript type check
 ```
 
-### Adding New Features
-
-1. **Frontend Components**: Add to `client/src/components/`
-2. **API Routes**: Modify `server/routes.ts`
-3. **AI Algorithms**: Extend `backend/models/yolo_detector.py`
-4. **Types**: Update `shared/schema.ts`
-
-## Troubleshooting
-
-### Common Issues
-
-**1. Port Already in Use**
+## 🐞 Troubleshooting
+**1. Port already in use**  
 ```bash
-# Kill process using port 5000
 npx kill-port 5000
 ```
-
-**2. Python Dependencies Missing**
+**2. Python dependencies missing**  
 ```bash
 cd backend
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-
-**3. Node Modules Issues**
+**3. Node modules issue**  
 ```bash
 rm -rf node_modules package-lock.json
 npm install
 ```
-
-**4. TypeScript Errors**
+**4. TypeScript errors**  
 ```bash
 npm run type-check
 ```
 
-### Performance Optimization
+## 💻 System Requirements
+### Minimum
+- 4GB RAM  
+- 2 CPU cores  
+- 1GB disk space  
+- Modern browser  
+### Recommended
+- 8GB RAM  
+- 4 CPU cores  
+- 2GB disk space  
+- 1080p+ display  
 
-- Use high-resolution images for better detection accuracy
-- Enable only required defect types in Advanced Settings
-- Use Standard analysis mode for balanced speed/accuracy
-- Ensure stable internet connection for optimal performance
+## 🌐 Browser Support
+- Chrome 90+  
+- Firefox 88+  
+- Safari 14+  
+- Edge 90+  
 
-## System Requirements
+## 🤝 Contributing
+1. Fork the repo  
+2. Create feature branch: `git checkout -b feature-name`  
+3. Make changes & test  
+4. Commit: `git commit -m "Add feature"`  
+5. Push: `git push origin feature-name`  
+6. Open PR  
 
-### Minimum Requirements
-- 4GB RAM
-- 2 CPU cores
-- 1GB available disk space
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+## 📜 License
+Licensed under the **MIT License** – see [LICENSE](./LICENSE) file.  
 
-### Recommended Requirements
-- 8GB RAM
-- 4 CPU cores
-- 2GB available disk space
-- High-resolution display (1920x1080 or higher)
+## 📩 Support
+For support, issues, or feature requests:  
+- Open an issue in the repo  
+- Or contact the dev team  
 
-## Browser Support
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## API Documentation
-
-### Image Analysis Endpoint
-
-**POST** `/api/analyze-fallback`
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: Form data with `file` field containing the image
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Analysis completed successfully",
-  "image_info": {
-    "filename": "weld_xray.jpg",
-    "width": 1024,
-    "height": 768,
-    "format": "JPEG",
-    "size_bytes": 2048000
-  },
-  "detections": [
-    {
-      "class": "crack",
-      "confidence": 0.92,
-      "bbox": {
-        "x": 300,
-        "y": 250,
-        "width": 150,
-        "height": 80
-      },
-      "center": {
-        "x": 375,
-        "y": 290
-      }
-    }
-  ],
-  "summary": {
-    "total_defects": 1,
-    "defect_types": {
-      "crack": 1
-    },
-    "average_confidence": 0.92,
-    "processing_time": 2.4
-  }
-}
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Test thoroughly
-5. Commit your changes: `git commit -am 'Add feature'`
-6. Push to the branch: `git push origin feature-name`
-7. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, issues, or feature requests, please create an issue in the GitHub repository or contact the development team.
-
----
-
-**Note**: This system is designed for demonstration and educational purposes. For production welding inspection, ensure proper calibration and validation with certified welding standards.
+**Note**: This system is designed for demonstration and educational purposes. For production welding inspection, ensure calibration & validation with certified welding standards.
